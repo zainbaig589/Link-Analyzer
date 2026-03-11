@@ -1,23 +1,34 @@
-import streamlit as st
-from risk_engine import calculate_risk
+from flask import Flask, render_template, request
+from analyzer import analyze_url
 
-st.title("AI Browser Security Assistant")
+app = Flask(__name__)
 
-url = st.text_input("Enter Website URL")
+@app.route("/", methods=["GET","POST"])
 
-if st.button("Analyze"):
+def home():
 
-    score, reasons = calculate_risk(url)
+    result = None
+    score = None
+    reasons = []
 
-    st.subheader(f"Risk Score: {score}/100")
+    if request.method == "POST":
 
-    if score > 70:
-        st.error("High Risk Website")
-    elif score > 40:
-        st.warning("Medium Risk Website")
-    else:
-        st.success("Website Looks Safe")
+        url = request.form["url"]
 
-    st.write("Reasons:")
-    for r in reasons:
-        st.write("- ", r)
+        score, reasons = analyze_url(url)
+
+        if score >= 40:
+            result = "Website Looks Safe"
+        else:
+            result = "Potentially Risky Website"
+
+    return render_template(
+        "index.html",
+        result=result,
+        score=score,
+        reasons=reasons
+    )
+
+
+if __name__ == "__main__":
+    app.run(debug=True)
