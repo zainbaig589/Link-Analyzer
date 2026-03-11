@@ -13,7 +13,7 @@ if st.button("Analyze"):
 
         score, verdict, reasons = get_analysis(url)
 
-        st.subheader(f"Risk Score: {score}/100")
+        st.subheader(f"Safe: {score}/100")
 
         if score > 70:
             st.success(verdict)
