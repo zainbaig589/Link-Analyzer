@@ -1,24 +1,68 @@
-from url_features import *
+from security_checks import *
 
-def calculate_risk(url):
+
+def analyze_url(url):
+
+    domain = clean_domain(url)
 
     score = 0
     reasons = []
 
-    if url_length(url) > 50:
+    cert = check_https(domain)
+
+    if cert:
+
         score += 20
-        reasons.append("URL is unusually long")
+        reasons.append("HTTPS supported")
 
-    if has_https(url) == 0:
-        score += 30
-        reasons.append("Website does not use HTTPS")
+        if check_ssl_expiry(cert):
 
-    if suspicious_words(url) == 1:
-        score += 25
-        reasons.append("Suspicious keyword detected")
+            score += 10
+            reasons.append("SSL certificate valid")
 
-    if domain_age(url) == 0:
-        score += 25
-        reasons.append("Domain age unknown or very new")
+        else:
+            reasons.append("SSL certificate expired")
+
+    else:
+
+        reasons.append("No HTTPS support")
+
+
+    if check_https_redirect(domain):
+
+        score += 10
+        reasons.append("HTTP redirects to HTTPS")
+
+    else:
+
+        reasons.append("No HTTPS redirect")
+
+
+    if suspicious_tld(domain):
+
+        score -= 10
+        reasons.append("Suspicious domain extension")
+
+
+    if long_url(url):
+
+        score -= 10
+        reasons.append("URL length suspicious")
+
+
+    age = domain_age(domain)
+
+    if age:
+
+        if age > 365:
+
+            score += 20
+            reasons.append("Domain older than 1 year")
+
+        else:
+
+            score -= 10
+            reasons.append("New domain")
+
 
     return score, reasons

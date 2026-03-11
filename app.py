@@ -1,34 +1,29 @@
-from flask import Flask, render_template, request
-from analyzer import analyze_url
+import streamlit as st
+from analyzer import get_analysis
 
-app = Flask(__name__)
 
-@app.route("/", methods=["GET","POST"])
+st.title("AI Browser Security Assistant")
 
-def home():
+url = st.text_input("Enter Website URL")
 
-    result = None
-    score = None
-    reasons = []
 
-    if request.method == "POST":
+if st.button("Analyze"):
 
-        url = request.form["url"]
+    if url:
 
-        score, reasons = analyze_url(url)
+        score, verdict, reasons = get_analysis(url)
+
+        st.subheader(f"Risk Score: {score}/100")
 
         if score >= 40:
-            result = "Website Looks Safe"
+            st.success(verdict)
         else:
-            result = "Potentially Risky Website"
+            st.error(verdict)
 
-    return render_template(
-        "index.html",
-        result=result,
-        score=score,
-        reasons=reasons
-    )
+        st.write("Reasons:")
 
+        for r in reasons:
+            st.write("-", r)
 
-if __name__ == "__main__":
-    app.run(debug=True)
+    else:
+        st.warning("Please enter a URL")
