@@ -1,68 +1,24 @@
-from security_checks import *
-
+from security_checks import check_https, check_domain_age, suspicious_keywords, long_url
 
 def analyze_url(url):
 
-    domain = clean_domain(url)
-
-    score = 0
+    score = 100
     reasons = []
 
-    cert = check_https(domain)
+    if not check_https(url):
+        score -= 30
+        reasons.append("Website does not use HTTPS")
 
-    if cert:
-
-        score += 20
-        reasons.append("HTTPS supported")
-
-        if check_ssl_expiry(cert):
-
-            score += 10
-            reasons.append("SSL certificate valid")
-
-        else:
-            reasons.append("SSL certificate expired")
-
-    else:
-
-        reasons.append("No HTTPS support")
-
-
-    if check_https_redirect(domain):
-
-        score += 10
-        reasons.append("HTTP redirects to HTTPS")
-
-    else:
-
-        reasons.append("No HTTPS redirect")
-
-
-    if suspicious_tld(domain):
-
-        score -= 10
-        reasons.append("Suspicious domain extension")
-
+    if suspicious_keywords(url):
+        score -= 20
+        reasons.append("URL contains suspicious keywords")
 
     if long_url(url):
-
         score -= 10
-        reasons.append("URL length suspicious")
+        reasons.append("URL is unusually long")
 
-
-    age = domain_age(domain)
-
-    if age:
-
-        if age > 365:
-
-            score += 20
-            reasons.append("Domain older than 1 year")
-
-        else:
-
-            score -= 10
-            reasons.append("New domain")
-
+    if not check_domain_age(url):
+        score -= 10
+        reasons.append("Domain age could not be verified")
 
     return score, reasons
